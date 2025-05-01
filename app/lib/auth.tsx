@@ -34,8 +34,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }): JSX.E
     await signInWithEmailAndPassword(auth, email, password);
     const user = auth.currentUser;
     if (user) {
+      console.log('User signed in:', user);
       const idToken = await user.getIdToken();
-      document.cookie = `firebaseIdToken=${idToken}; path=/; secure; HttpOnly`;
+      document.cookie = `firebaseIdToken=${idToken}; path=/;`; // Set cookie syn
+      localStorage.setItem('firebaseIdToken', idToken);
     }
   };
 
@@ -48,8 +50,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }): JSX.E
   };
 
   const logout = async () => {
-    await signOut(auth).then(() => {
-      document.cookie = 'firebaseIdToken=; path=/; secure; HttpOnly';
+    await signOut(auth).then(async () => {
+      document.cookie = 'firebaseIdToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     }).finally(() => {
       setUser(null);
       setLoading(false);

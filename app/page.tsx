@@ -24,11 +24,7 @@ export default function Home() {
   const [monthlyBudget, setMonthlyBudget] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user) {
-      router.push('/login');
-    }
-  }, [user, router])
+  
 
   useEffect(() => {
     const loadData = async () => {
