@@ -7,13 +7,16 @@ interface ExpenseFormProps {
   setExpenses: React.Dispatch<React.SetStateAction<Expense[]>>;
 }
 
+import { addExpense } from '../lib/firestore';
+
 export default function ExpenseForm({ setExpenses }: ExpenseFormProps) {
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('food');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !amount || parseFloat(amount) <= 0) {
       alert('Please fill all fields with valid values');
@@ -28,11 +31,20 @@ export default function ExpenseForm({ setExpenses }: ExpenseFormProps) {
       date,
     };
 
-    setExpenses((prev) => [...prev, newExpense]);
-    setName('');
-    setAmount('');
-    setCategory('food');
-    setDate(new Date().toISOString().split('T')[0]);
+    try {
+      setIsSubmitting(true);
+      const savedExpense = await addExpense(newExpense);
+      setExpenses((prev) => [...prev, { ...savedExpense, id: Number(savedExpense.id) }]);
+      setName('');
+      setAmount('');
+      setCategory('food');
+      setDate(new Date().toISOString().split('T')[0]);
+    } catch (error) {
+      console.error('Failed to add expense:', error);
+      alert('Failed to add expense. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

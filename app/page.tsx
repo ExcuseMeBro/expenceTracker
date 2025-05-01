@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Expense, RecurringPayment } from './types';
 import Header from './components/Header';
 import Tabs from './components/Tabs';
@@ -11,11 +12,42 @@ import RecurringForm from './components/RecurringForm';
 import UpcomingPayments from './components/UpcomingPayments';
 import RecurringList from './components/RecurringList';
 
+import { getExpenses, getBudget } from './lib/firestore';
+import { useAuth } from './lib/auth';
+
 export default function Home() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'regular' | 'recurring'>('regular');
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [recurringPayments, setRecurringPayments] = useState<RecurringPayment[]>([]);
-  const [monthlyBudget, setMonthlyBudget] = useState<number>(1500);
+  const [monthlyBudget, setMonthlyBudget] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+    }
+  }, [user, router])
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [fetchedExpenses, fetchedBudget] = await Promise.all([
+          getExpenses(),
+          getBudget()
+        ]);
+        setExpenses(fetchedExpenses);
+        setMonthlyBudget(fetchedBudget);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        alert('Failed to load data. Please refresh the page.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">

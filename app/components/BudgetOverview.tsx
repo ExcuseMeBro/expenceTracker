@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPencilAlt } from '@fortawesome/free-solid-svg-icons';
 import { formatCurrency } from '../lib/utils';
+import { saveBudget } from '../lib/firestore';
 
 interface BudgetOverviewProps {
   monthlyBudget: number;
@@ -28,15 +29,20 @@ export default function BudgetOverview({
       ? 'bg-yellow-500'
       : 'bg-green-500';
 
-  const handleSaveBudget = () => {
+const handleSaveBudget = async () => {
     const parsedBudget = parseFloat(newBudget);
     if (isNaN(parsedBudget) || parsedBudget < 0) {
       alert('Please enter a valid budget amount');
       return;
     }
-    setMonthlyBudget(parsedBudget);
-    localStorage.setItem('monthlyBudget', parsedBudget.toString());
-    setIsModalOpen(false);
+    try {
+      await saveBudget(parsedBudget);
+      setMonthlyBudget(parsedBudget);
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Failed to save budget:', error);
+      alert('Failed to save budget. Please try again.');
+    }
   };
 
   return (
